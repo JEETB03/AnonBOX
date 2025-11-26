@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"sync"
@@ -12,6 +13,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 // P2PManager handles the libp2p host and networking
@@ -47,10 +49,7 @@ func NewP2PManager(ctx context.Context) *P2PManager {
 
 // SetKey sets the encryption key derived from a password
 func (p *P2PManager) SetKey(password string) {
-	// TODO: Use SHA-256 to derive key. For now, just using a placeholder or assuming the caller handles it.
-	// In a real app, we'd import crypto/sha256.
-	// For now, let's just assume the password IS the key if 32 bytes, or pad it.
-	// This is a placeholder. The SetEncryptionKey method is preferred.
+	// Placeholder
 }
 
 func (p *P2PManager) SetEncryptionKey(key []byte) {
@@ -101,6 +100,30 @@ func (p *P2PManager) HandlePeerFound(pi peer.AddrInfo) {
 			log.Printf("Connected to peer: %s", pi.ID)
 		}
 	}
+}
+
+// ConnectToAddress connects to a peer using a multiaddress string
+func (p *P2PManager) ConnectToAddress(addrStr string) error {
+	maddr, err := ma.NewMultiaddr(addrStr)
+	if err != nil {
+		return fmt.Errorf("invalid multiaddress: %w", err)
+	}
+
+	info, err := peer.AddrInfoFromP2pAddr(maddr)
+	if err != nil {
+		return fmt.Errorf("failed to get peer info: %w", err)
+	}
+
+	p.PeerMutex.Lock()
+	p.Peers[info.ID] = *info
+	p.PeerMutex.Unlock()
+
+	if err := p.Host.Connect(p.Ctx, *info); err != nil {
+		return fmt.Errorf("failed to connect to peer: %w", err)
+	}
+
+	log.Printf("Connected to peer: %s", info.ID)
+	return nil
 }
 
 func (p *P2PManager) handleStream(s network.Stream) {

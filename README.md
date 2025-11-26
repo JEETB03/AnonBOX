@@ -23,8 +23,8 @@
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/JEETB03/AnonBOX.git
-   cd AnonBOX
+   git clone https://github.com/JEETB03/AnonBox.git
+   cd AnonBox
    ```
 
 2. **Build**
@@ -44,6 +44,8 @@ Start the node:
 
 **Commands**:
 - `peers`: List connected peers.
+- `connect <multiaddr>`: Connect to a peer manually (WAN/Internet).
+  - Example: `connect /ip4/1.2.3.4/tcp/4001/p2p/QmPeerID...`
 - `chat <peerID> <message>`: Send a secure message.
 - `share <peerID> <filePath>`: Send a file securely.
 - `broadcast <message>`: Broadcast a message to all connected peers.
@@ -57,6 +59,34 @@ Start the node:
    - **Chat**: Real-time secure messaging.
    - **Peers**: View and manage connected peers.
    - **Files**: Send files to peers.
+
+## 🌐 How to Connect
+
+### Local Network (LAN)
+AnonBOX uses **mDNS** for automatic discovery. If you and your friend are on the same Wi-Fi or LAN, simply start the application on both devices. You will automatically discover each other and appear in the `peers` list.
+
+### Internet (WAN)
+To connect with someone over the internet:
+1. **Port Forwarding**: Ensure the host allows incoming connections on the P2P port (random by default, or configured). *Note: Currently AnonBOX binds to a random port. For WAN, you may need to check your logs for the listening address.*
+2. **Share Address**: One peer must share their **Multiaddress** with the other.
+   - The address looks like: `/ip4/YOUR_PUBLIC_IP/tcp/PORT/p2p/YOUR_PEER_ID`
+3. **Connect**: The other peer runs the `connect` command with this address.
+   ```bash
+   connect /ip4/203.0.113.1/tcp/12345/p2p/Qm...
+   ```
+
+## 🔐 Working Mechanism
+
+1. **Initialization**: When AnonBOX starts, it generates a unique Libp2p host and identity. It starts listening on a random TCP port.
+2. **Discovery**:
+   - **mDNS**: Broadcasts presence on the local network to find peers.
+   - **DHT/Manual**: Can connect to specific peers via multiaddress.
+3. **Secure Channel**:
+   - **Transport Layer**: Uses Noise or TLS to secure the connection stream.
+   - **Application Layer**: If a password is provided, all messages and files are **AES-256-GCM** encrypted before sending. Only peers with the same password can decrypt the content.
+4. **Amnesic Storage**:
+   - Messages are stored in a Go slice (RAM).
+   - When the application closes, the OS reclaims the memory, effectively wiping all traces. No data is ever written to disk (except downloaded files).
 
 ## 📱 Android Support
 

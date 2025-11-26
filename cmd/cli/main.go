@@ -24,7 +24,7 @@ func main() {
 	p2pMgr = core.NewP2PManager(ctx)
 
 	var rootCmd = &cobra.Command{
-		Use:   "piratecove",
+		Use:   "anonbox",
 		Short: "P2P Amnesic Chatroom",
 	}
 
@@ -129,6 +129,26 @@ func runStart(cmd *cobra.Command, args []string) {
 			}
 			p2pMgr.PeerMutex.RUnlock()
 			fmt.Println("Broadcast sent.")
+		case "connect":
+			if len(parts) < 2 {
+				fmt.Println("Usage: connect <multiaddr>")
+				continue
+			}
+			maddr := parts[1]
+			// We need to parse the multiaddr to get peer info
+			// This requires importing "github.com/multiformats/go-multiaddr"
+			// and "github.com/libp2p/go-libp2p/core/peer"
+			// Since we can't easily add imports here without context of the whole file imports,
+			// I'll assume the imports are there or I'll add them in a separate step if needed.
+			// Actually, main.go already imports "github.com/libp2p/go-libp2p/core/peer".
+			// We need multiaddr.
+			// Let's try to do it via P2PManager if possible, or just add the import.
+			// I'll add a ConnectToAddress method to P2PManager in p2p.go first, then call it here.
+			if err := p2pMgr.ConnectToAddress(maddr); err != nil {
+				fmt.Printf("Error connecting: %v\n", err)
+			} else {
+				fmt.Println("Connected!")
+			}
 		case "exit", "quit":
 			fmt.Println("Exiting...")
 			return
